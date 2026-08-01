@@ -1,22 +1,22 @@
 package com.example.lfu_cache.cache;
 
+import java.util.concurrent.atomic.LongAdder;
+
 public class CacheMetrics {
-    private long hits = 0;
-    private long misses = 0;
-    private long evictions = 0;
+    private final LongAdder hits = new LongAdder();
+    private final LongAdder misses = new LongAdder();
+    private final LongAdder evictions = new LongAdder();
 
-    // TODO: Evaluate if standard primitive long counters are adequate
-    // under high concurrent request loads as specified in README requirements.
-    public void recordHit() { hits++; }
-    public void recordMiss() { misses++; }
-    public void recordEviction() { evictions++; }
+    public void recordHit() { hits.increment(); }
+    public void recordMiss() { misses.increment(); }
+    public void recordEviction() { evictions.increment(); }
 
-    public long getHits() { return hits; }
-    public long getMisses() { return misses; }
-    public long getEvictions() { return evictions; }
+    public long getHits() { return hits.sum(); }
+    public long getMisses() { return misses.sum(); }
+    public long getEvictions() { return evictions.sum(); }
 
     public double getHitRate() {
-        long total = hits + misses;
-        return total == 0 ? 0.0 : (double) hits / total;
+        long total = hits.sum() + misses.sum();
+        return total == 0 ? 0.0 : (double) hits.sum() / total;
     }
 }

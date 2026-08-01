@@ -11,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CacheMetricsTest {
 
-    /*
     @Test
     @DisplayName("Verify accuracy of Hits, Misses, and Evictions under multi-threaded writes")
     void testConcurrentMetricsUpdate() throws InterruptedException {
@@ -41,10 +40,8 @@ class CacheMetricsTest {
 
         long expectedCount = (long) threads * operationsPerThread;
 
-        // NOTE: This test will FAIL on the non-atomic long counters in original CacheMetrics.java
         assertEquals(expectedCount, metrics.getHits(), "Hits metric suffered race conditions");
         assertEquals(expectedCount, metrics.getMisses(), "Misses metric suffered race conditions");
         assertEquals(expectedCount, metrics.getEvictions(), "Evictions metric suffered race conditions");
     }
-     */
 }

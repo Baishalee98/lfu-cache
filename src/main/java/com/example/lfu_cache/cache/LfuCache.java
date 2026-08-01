@@ -5,14 +5,50 @@ import java.util.Map;
 
 public class LfuCache<K, V> {
 
+    private static class FrequencyBucket<K, V> {
+        CacheNode<K, V> head;
+        CacheNode<K, V> tail;
+
+        FrequencyBucket() {
+            head = new CacheNode<>(null, null);
+            tail = new CacheNode<>(null, null);
+            head.next = tail;
+            tail.prev = head;
+        }
+
+        void addToTail(CacheNode<K, V> node) {
+            node.prev = tail.prev;
+            node.next = tail;
+            tail.prev.next = node;
+            tail.prev = node;
+        }
+
+        void remove(CacheNode<K, V> node) {
+            node.prev.next = node.next;
+            node.next.prev = node.prev;
+        }
+
+        boolean isEmpty() {
+            return head.next == tail;
+        }
+
+        CacheNode<K, V> getFirst() {
+            return head.next == tail ? null : head.next;
+        }
+    }
+
     private final int capacity;
     private final Map<K, CacheNode<K, V>> mainStore;
+    private final Map<Integer, FrequencyBucket<K, V>> frequencyBuckets;
     private final CacheMetrics metrics;
+    private int minFrequency;
 
     public LfuCache(int capacity) {
         this.capacity = capacity;
         this.mainStore = new HashMap<>();
+        this.frequencyBuckets = new HashMap<>();
         this.metrics = new CacheMetrics();
+        this.minFrequency = 0;
     }
 
     public synchronized V get(K key) {
@@ -22,8 +58,7 @@ public class LfuCache<K, V> {
         }
 
         CacheNode<K, V> node = mainStore.get(key);
-        node.incrementFrequency();
-        node.touch();
+        updateFrequency(node);
         metrics.recordHit();
 
         return node.getValue();
@@ -35,8 +70,7 @@ public class LfuCache<K, V> {
         if (mainStore.containsKey(key)) {
             CacheNode<K, V> node = mainStore.get(key);
             node.setValue(value);
-            node.incrementFrequency();
-            node.touch();
+            updateFrequency(node);
             return;
         }
 
@@ -46,35 +80,48 @@ public class LfuCache<K, V> {
 
         CacheNode<K, V> newNode = new CacheNode<>(key, value);
         mainStore.put(key, newNode);
+        addToFrequencyBucket(newNode, 1);
+        minFrequency = 1;
+    }
+
+    private void updateFrequency(CacheNode<K, V> node) {
+        int oldFreq = node.getFrequency();
+        int newFreq = oldFreq + 1;
+
+        removeFromFrequencyBucket(node, oldFreq);
+        node.incrementFrequency();
+        node.touch();
+        addToFrequencyBucket(node, newFreq);
+
+        if (oldFreq == minFrequency && frequencyBuckets.get(oldFreq).isEmpty()) {
+            minFrequency = newFreq;
+        }
+    }
+
+    private void addToFrequencyBucket(CacheNode<K, V> node, int frequency) {
+        FrequencyBucket<K, V> bucket = frequencyBuckets.computeIfAbsent(frequency, k -> new FrequencyBucket<>());
+        bucket.addToTail(node);
+    }
+
+    private void removeFromFrequencyBucket(CacheNode<K, V> node, int frequency) {
+        FrequencyBucket<K, V> bucket = frequencyBuckets.get(frequency);
+        if (bucket != null) {
+            bucket.remove(node);
+        }
     }
 
     private void evict() {
-        K keyToEvict = null;
-        int minFreq = Integer.MAX_VALUE;
-        long oldestTime = Long.MAX_VALUE;
-
-        // Linear loop over all elements in mainStore
-        for (Map.Entry<K, CacheNode<K, V>> entry : mainStore.entrySet()) {
-            // INSTRUMENTATION: Track element inspection
-            ComplexityCounter.increment();
-
-            CacheNode<K, V> node = entry.getValue();
-            if (node.getFrequency() < minFreq) {
-                minFreq = node.getFrequency();
-                oldestTime = node.getLastAccessedTime();
-                keyToEvict = entry.getKey();
-            } else if (node.getFrequency() == minFreq) {
-                if (node.getLastAccessedTime() < oldestTime) {
-                    oldestTime = node.getLastAccessedTime();
-                    keyToEvict = entry.getKey();
-                }
-            }
+        ComplexityCounter.increment();
+        
+        FrequencyBucket<K, V> bucket = frequencyBuckets.get(minFrequency);
+        if (bucket == null || bucket.isEmpty()) {
+            return;
         }
 
-        if (keyToEvict != null) {
-            mainStore.remove(keyToEvict);
-            metrics.recordEviction();
-        }
+        CacheNode<K, V> nodeToEvict = bucket.getFirst();
+        bucket.remove(nodeToEvict);
+        mainStore.remove(nodeToEvict.getKey());
+        metrics.recordEviction();
     }
 
     public synchronized int size() {
