@@ -1,7 +1,7 @@
-package com.example.lfucache.controller;
+package com.example.lfu_cache.controller;
 
-import com.example.lfucache.cache.CacheMetrics;
-import com.example.lfucache.service.CacheService;
+import com.example.lfu_cache.cache.CacheMetrics;
+import com.example.lfu_cache.service.CacheService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,7 +1,7 @@
-package com.example.lfucache.service;
+package com.example.lfu_cache.service;
 
-import com.example.lfucache.cache.LfuCache;
-import com.example.lfucache.cache.CacheMetrics;
+import com.example.lfu_cache.cache.LfuCache;
+import com.example.lfu_cache.cache.CacheMetrics;
 import org.springframework.stereotype.Service;
 
 @Service

@@ -1,4 +1,4 @@
-package com.example.lfucache.cache;
+package com.example.lfu_cache.cache;
 
 public class CacheMetrics {
     private long hits = 0;

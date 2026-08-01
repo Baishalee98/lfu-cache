@@ -1,6 +1,6 @@
-package com.example.lfucache.integration;
+package com.example.lfu_cache.integration;
 
-import com.example.lfucache.cache.LfuCache;
+import com.example.lfu_cache.cache.LfuCache;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

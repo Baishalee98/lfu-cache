@@ -1,6 +1,6 @@
 package com.example.lfu_cache.config;
 
-import com.example.lfucache.cache.LfuCache;
+import com.example.lfu_cache.cache.LfuCache;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
