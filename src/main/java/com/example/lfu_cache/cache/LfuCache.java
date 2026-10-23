@@ -3,39 +3,7 @@ package com.example.lfu_cache.cache;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LfuCache<K, V> {
-
-    private static class FrequencyBucket<K, V> {
-        CacheNode<K, V> head;
-        CacheNode<K, V> tail;
-
-        FrequencyBucket() {
-            head = new CacheNode<>(null, null);
-            tail = new CacheNode<>(null, null);
-            head.next = tail;
-            tail.prev = head;
-        }
-
-        void addToTail(CacheNode<K, V> node) {
-            node.prev = tail.prev;
-            node.next = tail;
-            tail.prev.next = node;
-            tail.prev = node;
-        }
-
-        void remove(CacheNode<K, V> node) {
-            node.prev.next = node.next;
-            node.next.prev = node.prev;
-        }
-
-        boolean isEmpty() {
-            return head.next == tail;
-        }
-
-        CacheNode<K, V> getFirst() {
-            return head.next == tail ? null : head.next;
-        }
-    }
+public class LfuCache<K, V> implements Cache<K, V> {
 
     private final int capacity;
     private final Map<K, CacheNode<K, V>> mainStore;
@@ -51,6 +19,7 @@ public class LfuCache<K, V> {
         this.minFrequency = 0;
     }
 
+    @Override
     public synchronized V get(K key) {
         if (!mainStore.containsKey(key)) {
             metrics.recordMiss();
@@ -64,6 +33,7 @@ public class LfuCache<K, V> {
         return node.getValue();
     }
 
+    @Override
     public synchronized void put(K key, V value) {
         if (capacity <= 0) return;
 
@@ -112,7 +82,7 @@ public class LfuCache<K, V> {
 
     private void evict() {
         ComplexityCounter.increment();
-        
+
         FrequencyBucket<K, V> bucket = frequencyBuckets.get(minFrequency);
         if (bucket == null || bucket.isEmpty()) {
             return;
@@ -124,10 +94,12 @@ public class LfuCache<K, V> {
         metrics.recordEviction();
     }
 
+    @Override
     public synchronized int size() {
         return mainStore.size();
     }
 
+    @Override
     public CacheMetrics getMetrics() {
         return metrics;
     }

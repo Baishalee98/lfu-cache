@@ -40,8 +40,8 @@ class CacheMetricsTest {
 
         long expectedCount = (long) threads * operationsPerThread;
 
-        assertEquals(expectedCount, metrics.getHits(), "Hits metric suffered race conditions");
-        assertEquals(expectedCount, metrics.getMisses(), "Misses metric suffered race conditions");
-        assertEquals(expectedCount, metrics.getEvictions(), "Evictions metric suffered race conditions");
+        assertEquals(expectedCount, metrics.getHits());
+        assertEquals(expectedCount, metrics.getMisses());
+        assertEquals(expectedCount, metrics.getEvictions());
     }
 }

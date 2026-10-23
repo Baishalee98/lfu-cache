@@ -1,5 +1,6 @@
 package com.example.lfu_cache.config;
 
+import com.example.lfu_cache.cache.Cache;
 import com.example.lfu_cache.cache.LfuCache;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +13,7 @@ public class CacheConfig {
     private int capacity;
 
     @Bean
-    public LfuCache<String, String> lfuCache() {
+    public Cache<String, String> lfuCache() {
         return new LfuCache<>(capacity);
     }
 }
